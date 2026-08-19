@@ -1051,9 +1051,16 @@ Expected: 마우스 활발히 이동 시 CPU 한 자릿수 %, 정지 시 ~0%. �
 
 Console 로그로 정지 상태에서 move 콜백이 발생하지 않음을 확인(폴링 없음 검증).
 
-- [ ] **Step 3: `README.md` 작성**
+- [ ] **Step 3: `README.md` 작성 (readme 스킬 활용, 완성도 높게)**
 
-빌드/실행 방법(`./scripts/build_app.sh`, 접근성 권한 부여), 기능·단축키·설정 설명.
+`readme` 스킬(`/Users/jesamkim/.kiro/crew/skills/readme/SKILL.md` 또는 imported 버전)을 읽고 그 형식에 맞춰 **제대로 멋지게** 작성한다. 최소 포함 내용:
+- 상단: 프로젝트 제목 + 한 줄 소개 + (가능하면) 데모 GIF/스크린샷 자리
+- 기능 목록(하이라이트/클릭 이펙트/스포트라이트/트레일/단축키)을 시각적으로 정리
+- 요구 환경(macOS 14+, Swift, CLT), 빌드·실행 방법(`./scripts/build_app.sh`, 접근성 권한 부여 절차)
+- 단축키 표(⌥⌘H/⌥⌘S/⌥⌘T)와 설정 항목 설명
+- 리소스 최적화 설계 요약(이벤트 기반·GPU 렌더·꺼진 효과 레이어 제거)
+- 테스트 실행법(`./scripts/test.sh`, XCTest 부재 배경 한 줄)
+사용자 요청: 완성 단계에서 README를 대충 넘기지 말고 스킬 기준으로 다듬을 것.
 
 - [ ] **Step 4: 전체 회귀 확인 + Codex 최종 리뷰**
 
