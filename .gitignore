@@ -1,3 +1,14 @@
 .build/
 *.app/
 .DS_Store
+
+# 설계·계획 문서는 repo에서 제외(로컬 보관)
+docs/
+
+# 아이콘 컨셉 참고 이미지(대용량 sd35l 생성물)와 중간 산출물은 제외.
+# 최종 산출물 assets/AppIcon.svg / AppIcon.icns 는 추적한다.
+assets/icon-concepts/
+assets/AppIcon.iconset/
+assets/icon_compare.png
+assets/icon_ghost_preview.png
+assets/concepts_montage.png

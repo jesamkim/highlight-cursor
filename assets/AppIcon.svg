@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="42%" r="75%">
+      <stop offset="0%" stop-color="#1B2A4A"/>
+      <stop offset="55%" stop-color="#0E1526"/>
+      <stop offset="100%" stop-color="#05080F"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7FD4DE"/>
+      <stop offset="50%" stop-color="#4FB3C4"/>
+      <stop offset="100%" stop-color="#3A8D9E"/>
+    </linearGradient>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="9" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="ghostShadow" x="-40%" y="-40%" width="180%" height="180%">
+      <feDropShadow dx="0" dy="8" stdDeviation="12" flood-color="#000000" flood-opacity="0.4"/>
+    </filter>
+    <clipPath id="squircle">
+      <rect x="0" y="0" width="1024" height="1024" rx="229" ry="229"/>
+    </clipPath>
+  </defs>
+
+  <g clip-path="url(#squircle)">
+    <rect x="0" y="0" width="1024" height="1024" fill="url(#bg)"/>
+
+    <!-- 시안 링 (톤다운 + 글로우) -->
+    <g filter="url(#glow)">
+      <circle cx="512" cy="500" r="252" fill="none" stroke="url(#ring)" stroke-width="30"/>
+    </g>
+    <circle cx="512" cy="500" r="237" fill="#4FB3C4" opacity="0.035"/>
+
+    <!-- Kiro 유령 커서 (애니/만화틱): 통통한 유령 + 반짝이는 눈 + 표정 + 또렷한 커서 -->
+    <!-- 부유 그림자 타원 -->
+    <ellipse cx="512" cy="690" rx="120" ry="26" fill="#000000" opacity="0.28"/>
+
+    <g filter="url(#ghostShadow)" transform="translate(512,486)">
+      <!-- 통통하고 둥근 유령 몸통 + 큼직한 물결 밑단 -->
+      <path d="M-118 6
+               a118 138 0 0 1 236 0
+               L118 150
+               q-29 40 -58 0
+               q-29 40 -58 0
+               q-29 40 -58 0
+               q-29 40 -58 0 Z"
+            fill="#FFFFFF" stroke="#0E1526" stroke-width="7" stroke-linejoin="round"/>
+
+      <!-- 눈 (크고 초롱초롱한 애니 눈 + 큰/작은 하이라이트 반짝임 2개) -->
+      <circle cx="-40" cy="-10" r="28" fill="#0E1526"/>
+      <circle cx="40" cy="-10" r="28" fill="#0E1526"/>
+      <!-- 큰 하이라이트 -->
+      <circle cx="-31" cy="-20" r="11" fill="#FFFFFF"/>
+      <circle cx="49" cy="-20" r="11" fill="#FFFFFF"/>
+      <!-- 작은 반짝임 -->
+      <circle cx="-46" cy="-2" r="5" fill="#FFFFFF" opacity="0.85"/>
+      <circle cx="34" cy="-2" r="5" fill="#FFFFFF" opacity="0.85"/>
+
+      <!-- 부드럽고 큰 시안 볼터치 -->
+      <ellipse cx="-74" cy="30" rx="18" ry="13" fill="#7FD4DE" opacity="0.55"/>
+      <ellipse cx="74" cy="30" rx="18" ry="13" fill="#7FD4DE" opacity="0.55"/>
+
+      <!-- 유령이 든 커서 화살표 (두꺼운 아웃라인 + 시안 강조, 만화틱하게 또렷) -->
+      <g transform="translate(104,104) rotate(-6)">
+        <path d="M0 0 L0 128 L32 100 L54 150 L78 139 L56 90 L102 90 Z"
+              fill="#FFFFFF" stroke="#0E1526" stroke-width="9" stroke-linejoin="round"/>
+        <!-- 커서 안쪽 시안 하이라이트 -->
+        <path d="M14 24 L14 96 L34 79 L48 110 L58 106 L44 76 L70 76 Z"
+              fill="#7FD4DE" opacity="0.5"/>
+      </g>
+    </g>
+  </g>
+</svg>
