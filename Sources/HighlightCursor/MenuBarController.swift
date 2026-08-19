@@ -24,13 +24,13 @@ final class MenuBarController {
         let menu = NSMenu()
         menu.autoenablesItems = false   // isEnabled를 수동 제어(미구현 효과 비활성화)
         let s = store.settings
-        // 하이라이트는 구현됨(enabled). 나머지 효과는 아직 미구현이라 "(준비 중)"으로
-        // 비활성화해 동작하지 않는 토글을 눌러 혼란이 생기지 않게 한다.
-        // Task 7/8/9에서 각 효과가 구현되면 enabled=true로 살린다.
+        // 하이라이트·스포트라이트·클릭 이펙트는 구현됨(enabled). 트레일은 아직
+        // 미구현이라 "(준비 중)"으로 비활성화해 동작하지 않는 토글을 눌러 혼란이 생기지 않게 한다.
+        // Task 9에서 트레일이 구현되면 enabled=true로 살린다.
         menu.addItem(toggleItem("하이라이트", isOn: s.highlightEnabled,
                                 action: #selector(toggleHighlight), enabled: true))
-        menu.addItem(toggleItem("스포트라이트 (준비 중)", isOn: s.spotlightEnabled,
-                                action: #selector(toggleSpotlight), enabled: false))
+        menu.addItem(toggleItem("스포트라이트", isOn: s.spotlightEnabled,
+                                action: #selector(toggleSpotlight), enabled: true))
         menu.addItem(toggleItem("트레일 (준비 중)", isOn: s.trailEnabled,
                                 action: #selector(toggleTrail), enabled: false))
         menu.addItem(toggleItem("클릭 이펙트", isOn: s.clickEffectEnabled,
