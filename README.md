@@ -1,5 +1,9 @@
 # Highlight Cursor 👻
 
+<p align="center">
+  <img src="assets/readme/app-icon.png" alt="Highlight Cursor 앱 아이콘 (Kiro 유령 커서)" width="120" />
+</p>
+
 **화면 발표·강의·녹화에서 마우스 포인터가 잘 보이도록 커서에 시각 효과를 입히는 macOS 메뉴바 앱입니다.**
 
 Swift + AppKit + Core Animation으로 처음부터 만들었고, 상시 표시되는 하이라이트 링은 GPU 애니메이션만 사용해 마우스가 멈추면 CPU 사용량이 0%에 수렴합니다.
@@ -15,6 +19,10 @@ Swift + AppKit + Core Animation으로 처음부터 만들었고, 상시 표시�
 - ⚙️ **설정 창** — 색상·크기·투명도·반경·어둡기·잔상 개수를 슬라이더로 조정하고, macOS 로그인 시 자동 실행도 여기서 켤 수 있습니다.
 
 모든 효과는 메뉴바 아이콘에서 개별적으로 켜고 끌 수 있고, 설정은 앱을 재시작해도 그대로 유지됩니다.
+
+<p align="center">
+  <img src="assets/readme/effects-demo.png" alt="세 가지 효과 모습: 노란 하이라이트 링, 시안 색 클릭 물결 이펙트, 주변을 어둡게 덮는 스포트라이트" width="700" />
+</p>
 
 ## 리소스 최적화
 
@@ -92,6 +100,10 @@ open HighlightCursor.app
 - **아키텍처**: 3-타깃 구조 — `HighlightCursorCore`(라이브러리), `HighlightCursor`(실행 앱), `HighlightCursorTests`(테스트 실행 파일)
 - **배포**: 개인 사용 목적, ad-hoc 코드서명(App Store 배포 범위 밖)
 
+## 만든이
+
+**Jesam Kim** ([@jesamkim](https://github.com/jesamkim))이 설계·구현했습니다. 브레인스토밍부터 스펙·계획·구현·코드 리뷰까지 AI 에이전트 **Kiro** 👻와 함께 만들었습니다.
+
 ## 라이선스
 
-개인 프로젝트입니다.
+[MIT License](LICENSE)
