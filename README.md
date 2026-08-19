@@ -41,13 +41,26 @@ Swift + AppKit + Core Animation으로 처음부터 만들었고, 상시 표시�
 
 ## 빌드 & 실행
 
-이 프로젝트는 **Xcode.app 없이** Command Line Tools + Swift Package Manager만으로 빌드됩니다.
+이 프로젝트는 **Xcode.app 없이** Command Line Tools + `swiftc` 직접 컴파일만으로 빌드됩니다.
+
+### 사전 설치 및 점검
+
+macOS 14+와 Swift 6이 필요합니다. 처음 빌드하는 Mac에서는 Apple Command Line Tools를 설치한 뒤, Swift 컴파일러가 정상 동작하는지 먼저 확인하세요.
 
 ```bash
-# 요구사항: macOS 14+, Swift 6 (Command Line Tools)
+xcode-select --install
+
+# 설치가 끝난 뒤 새 터미널에서 실행
+xcode-select -p
+swift --version
+```
+
+> **참고 — SwiftPM `Undefined symbols` 에러**: macOS 26 + Swift 6.3 환경에서 `swift build`/`swift package describe`를 실행하면 `PackageDescription.Package.__allocating_init` 심볼을 찾지 못하는 링크 에러가 발생할 수 있습니다. 이것은 Command Line Tools 내부의 SwiftPM 바이너리와 `libPackageDescription.dylib` 간의 심볼 불일치(`SwiftVersion` vs `SwiftLanguageMode`)이며, 프로젝트 소스 문제가 아닙니다. 빌드 스크립트는 이 문제를 우회하기 위해 SwiftPM 대신 `swiftc`로 직접 컴파일합니다. Apple이 CLT 업데이트로 이 불일치를 해결하면 SwiftPM 빌드로 복귀할 수 있습니다.
+
+```bash
 git clone https://github.com/jesamkim/highlight-cursor.git
 cd highlight-cursor
-./scripts/build_app.sh   # swift build -> .app 번들 조립 -> ad-hoc 코드서명
+./scripts/build_app.sh   # swiftc 직접 빌드 -> .app 번들 조립 -> ad-hoc 코드서명
 open HighlightCursor.app
 ```
 
@@ -100,7 +113,7 @@ open HighlightCursor.app
 ## 기술 스택
 
 - **언어/프레임워크**: Swift 6, AppKit, Core Animation(QuartzCore), CoreGraphics
-- **빌드**: Swift Package Manager (Xcode.app 불필요)
+- **빌드**: `swiftc` 직접 컴파일 (SwiftPM 매니페스트는 참조용으로 유지, Xcode.app 불필요)
 - **아키텍처**: 3-타깃 구조 — `HighlightCursorCore`(라이브러리), `HighlightCursor`(실행 앱), `HighlightCursorTests`(테스트 실행 파일)
 - **배포**: 개인 사용 목적, ad-hoc 코드서명(App Store 배포 범위 밖)
 
