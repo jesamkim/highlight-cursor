@@ -3,11 +3,13 @@ import HighlightCursorCore
 
 /// 하이라이트/스포트라이트/트레일 세부값과 로그인 시 자동 실행을 조정하는 설정 창.
 /// 각 컨트롤 변경 시 즉시 `store.settings`를 갱신하고 `onChange()`를 호출해
-/// 살아있는 효과에 반영한다(재빌드나 재실행 불필요).
+/// 살아있는 효과에 반영한다(재빌드나 재실행 불필요). 상단의 미리보기 패널에서
+/// 가상 커서로 각 효과를 즉시 확인할 수 있다.
 @MainActor
-final class SettingsWindowController: NSWindowController {
+final class SettingsWindowController: NSWindowController, NSWindowDelegate {
     private let store: SettingsStore
     private let onChange: () -> Void
+    private let preview: PreviewPanelView
 
     // 값 표시 라벨(슬라이더 옆 숫자)
     private let diameterValueLabel = NSTextField(labelWithString: "")
@@ -19,15 +21,38 @@ final class SettingsWindowController: NSWindowController {
     init(store: SettingsStore, onChange: @escaping () -> Void) {
         self.store = store
         self.onChange = onChange
+        self.preview = PreviewPanelView(settings: store.settings)
         let window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 400, height: 460),
+            contentRect: NSRect(x: 0, y: 0, width: 400, height: 620),
             styleMask: [.titled, .closable],
             backing: .buffered,
             defer: false
         )
         window.title = "Highlight Cursor 설정"
         super.init(window: window)
+        window.delegate = self
         buildForm()
+
+        // 앱이 숨겨지면(Cmd+H 등) windowDidMiniaturize가 불리지 않으므로
+        // 별도로 구독해 미리보기 타이머를 확실히 멈추고, 다시 보이면 재시작한다.
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(appDidHide),
+            name: NSApplication.didHideNotification, object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self, selector: #selector(appDidUnhide),
+            name: NSApplication.didUnhideNotification, object: nil
+        )
+    }
+
+    @objc private func appDidHide() { preview.stopAnimating() }
+    @objc private func appDidUnhide() {
+        guard window?.isVisible == true else { return }
+        preview.startAnimating()
+    }
+
+    deinit {
+        NotificationCenter.default.removeObserver(self)
     }
 
     @available(*, unavailable)
@@ -35,8 +60,33 @@ final class SettingsWindowController: NSWindowController {
 
     func show() {
         NSApp.activate(ignoringOtherApps: true)
+        // 창을 재사용할 때, 그사이 메뉴바에서 토글됐을 수 있는 최신 설정을
+        // 미리보기에 반영한다(그렇지 않으면 생성 시점 스냅샷만 계속 보게 된다).
+        preview.apply(store.settings)
         showWindow(nil)
         window?.center()
+        preview.startAnimating()
+    }
+
+    /// 설정 창이 열려 있는 동안 메뉴바에서 효과를 토글했을 때, 그 최신 상태를
+    /// 미리보기에 즉시 반영한다(닫고 다시 열지 않아도 되도록).
+    func syncPreviewWithStore() {
+        preview.apply(store.settings)
+    }
+
+    /// 창이 최소화되거나 앱이 숨겨지면 보이지 않는 곳에서 타이머가 계속 돌지
+    /// 않도록 멈추고, 다시 보이면 재시작한다.
+    func windowDidMiniaturize(_ notification: Notification) {
+        preview.stopAnimating()
+    }
+
+    func windowDidDeminiaturize(_ notification: Notification) {
+        preview.startAnimating()
+    }
+
+    /// 창이 닫힐 때 미리보기 타이머를 반드시 멈춰 배경에서 계속 돌지 않게 한다.
+    func windowWillClose(_ notification: Notification) {
+        preview.stopAnimating()
     }
 
     // MARK: - Form
@@ -49,6 +99,9 @@ final class SettingsWindowController: NSWindowController {
         stack.spacing = 14
         stack.edgeInsets = NSEdgeInsets(top: 16, left: 16, bottom: 16, right: 16)
         stack.translatesAutoresizingMaskIntoConstraints = false
+
+        stack.addArrangedSubview(sectionLabel("미리보기"))
+        stack.addArrangedSubview(preview)
 
         stack.addArrangedSubview(sectionLabel("하이라이트"))
         stack.addArrangedSubview(sliderRow(
@@ -88,7 +141,7 @@ final class SettingsWindowController: NSWindowController {
         loginToggle.state = LaunchAtLogin.isEnabled() ? .on : .off
         stack.addArrangedSubview(loginToggle)
 
-        let contentView = NSView(frame: NSRect(x: 0, y: 0, width: 400, height: 460))
+        let contentView = NSView(frame: NSRect(x: 0, y: 0, width: 400, height: 620))
         contentView.addSubview(stack)
         NSLayoutConstraint.activate([
             stack.leadingAnchor.constraint(equalTo: contentView.leadingAnchor),
@@ -156,6 +209,7 @@ final class SettingsWindowController: NSWindowController {
         mutate(&s)
         store.settings = s
         refreshLabels(s)
+        preview.apply(s)
         onChange()
     }
 

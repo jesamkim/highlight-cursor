@@ -120,6 +120,9 @@ final class MenuBarController {
 
     private func changed() {
         rebuildMenu()   // 체크마크 상태 갱신
+        // 설정 창이 열려 있으면 미리보기도 최신 상태로 동기화한다(닫고 다시
+        // 열지 않아도 메뉴 토글이 즉시 반영되도록).
+        settingsWindow?.syncPreviewWithStore()
         onChange()
     }
 
