@@ -9,5 +9,6 @@ TinyTest.test("placeholder") {
 
 runSettingsTests()      // Task 2
 runCoordinateTests()    // Task 3
+runColorHexTests()      // Task 6
 
 TinyTest.summarize()
