@@ -34,6 +34,37 @@ final class HighlightLayer {
         // 글로우 세기도 사용자의 투명도 설정을 반영한다(투명도를 낮추면 글로우도 함께 옅어짐).
         layer.shadowOpacity = Float(settings.highlightOpacity * 2.0)
         layer.shadowOffset = .zero
+
+        // 은은한 펄스 애니메이션을 (재)설치한다. apply가 다시 불려도 유지되도록 여기서 건다.
+        installPulse(baseGlow: settings.highlightOpacity * 2.0)
+    }
+
+    /// 링이 천천히 커졌다 작아지는 스케일 펄스 + 글로우 맥동을 무한 반복으로 건다.
+    /// 전부 Core Animation(GPU) 프로퍼티라 애니메이션이 도는 동안 CPU 부담은 거의 없다.
+    /// `transform.scale`을 쓰므로 `move(to:)`의 position 갱신과 독립적으로 동작한다.
+    private func installPulse(baseGlow: Double) {
+        let period: CFTimeInterval = 1.6
+
+        // 스케일: 1.0 → 1.12 → 1.0 (은은하게)
+        let scale = CABasicAnimation(keyPath: "transform.scale")
+        scale.fromValue = 1.0
+        scale.toValue = 1.12
+
+        // 글로우 맥동: 기본 세기의 0.6배 ~ 1.2배 사이를 오간다(과하지 않게).
+        let glow = CABasicAnimation(keyPath: "shadowOpacity")
+        glow.fromValue = Float(baseGlow * 0.6)
+        glow.toValue = Float(min(baseGlow * 1.2, 1.0))
+
+        let group = CAAnimationGroup()
+        group.animations = [scale, glow]
+        group.duration = period
+        group.autoreverses = true                 // 커졌다 다시 작아지도록
+        group.repeatCount = .infinity
+        group.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+        group.isRemovedOnCompletion = false
+
+        layer.removeAnimation(forKey: "pulse")
+        layer.add(group, forKey: "pulse")
     }
 
     /// 레이어 중심을 지정 좌표로 옮긴다(anchorPoint 기본 0.5,0.5 → 중심 정렬).
