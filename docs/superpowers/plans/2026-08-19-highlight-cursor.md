@@ -1072,3 +1072,84 @@ Run: `swift test && ./scripts/build_app.sh`
 ```bash
 git add -A && git commit -m "docs: README + optimization verification"
 ```
+
+---
+
+### Task 15: 클릭 이펙트 스타일 프리셋 (애니 감성 4종)
+
+**Files:**
+- Modify: `Sources/HighlightCursorCore/Settings.swift` (`clickEffectStyle` 필드 추가)
+- Create: `Sources/HighlightCursor/Effects/ClickEffectStyle.swift` (스타일 enum + 각 스타일 렌더)
+- Modify: `Sources/HighlightCursor/Effects/ClickEffectLayer.swift` (스타일 분기)
+- Modify: `Sources/HighlightCursor/MenuBarController.swift` (스타일 선택 서브메뉴)
+- Modify: `Sources/HighlightCursor/Settings/SettingsWindow.swift` (Task 12 이후: 스타일 선택 UI)
+
+**방식**: 하이라이트(항상 표시)는 은은한 펄스로 차분하게 유지하고, **클릭 순간**에만 화려한 애니 이펙트가 터지게 한다. 클릭 이펙트 스타일을 프리셋으로 선택한다. 전부 GPU(Core Animation) 처리 + 요소 개수를 소수(3~8개)로 제한해 리소스를 가볍게 유지한다.
+
+**스타일 4종** (`enum ClickEffectStyle: String, Codable, CaseIterable`):
+1. `ripple` — 링 하나가 퍼지며 사라짐(Task 7 기본형). 차분한 기본값. 좌/우 색 구분 유지.
+2. `sakura` — 클릭 지점에서 분홍 벚꽃잎 5~6장이 각기 다른 방향으로 회전·부유하며 퍼져 페이드아웃. 꽃잎은 작은 `CAShapeLayer`(꽃잎 path) + `transform.rotation`/`position`/`opacity` 키프레임.
+3. `energyBurst` — 중앙 링 확산 + 방사형 광선(집중선) 6~8개가 팍 터졌다 수축. 배틀 애니 "기 모으기" 느낌. 좌/우 색 구분.
+4. `sparkle` — 작은 별(4각/5각) 6~8개가 사방으로 튀며 스케일·투명도로 반짝이다 사라짐. 마법소녀 이펙트.
+
+각 스타일은 `emit(at:kind:on:)`에서 분기하며, 모든 일회성 레이어는 애니메이션 완료 시 `removeFromSuperlayer`로 정리(누적 방지). 요소 개수 상한을 상수로 고정한다.
+
+**설정**: `Settings`에 `var clickEffectStyle: ClickEffectStyle = .ripple` 추가(기본값 ripple, 하위호환 위해 Codable 디코딩 시 누락되면 ripple).
+
+- [ ] **Step 1: Settings에 clickEffectStyle 추가 + TinyTest(기본값·디코딩 하위호환)**
+- [ ] **Step 2: ClickEffectStyle.swift 작성(enum + 스타일별 렌더 함수)**
+- [ ] **Step 3: ClickEffectLayer.emit을 스타일 분기로 변경**
+- [ ] **Step 4: MenuBarController에 "클릭 이펙트 스타일 ▸" 서브메뉴(라디오 체크)**
+- [ ] **Step 5: 빌드 + 실제 클릭 확인(각 스타일 눈으로) + CPU 측정(정지·클릭 연타 시)**
+- [ ] **Step 6: Codex 리뷰 반영 후 커밋**
+
+**주의(리소스)**: 파티클 개수 상한 준수, 매 프레임 CPU 계산 금지(전부 CA 애니메이션), 완료 시 레이어 제거. 클릭 연타 시에도 CPU가 한 자릿수 %를 넘지 않는지 Step 5에서 측정한다.
+
+---
+
+### Task 14: 앱 아이콘 (하이브리드 — sd35l 컨셉 + SVG 마무리)
+
+**Files:**
+- Create: `assets/icon-concepts/` (sd35l 생성 컨셉 이미지들, 참고용)
+- Create: `assets/AppIcon.svg` (최종 벡터 아이콘)
+- Create: `assets/icon/icon_*.png` (16~1024px, @1x/@2x)
+- Create: `HighlightCursor.app` 조립 시 포함할 `AppIcon.icns`
+- Modify: `Resources/Info.plist` (CFBundleIconFile 추가)
+- Modify: `scripts/build_app.sh` (.icns를 `Contents/Resources/`에 복사)
+
+**방식**: 메뉴바 아이콘은 SF Symbol(`cursorarrow.rays`) 그대로 두고, 여기서는 **.app 번들 아이콘**(Dock/Finder)만 만든다. sd35l로 컨셉 3~4종을 뽑아 방향을 정한 뒤, 최종본은 SVG로 깔끔하게 다시 그려 macOS 아이콘 관례(squircle, 단순한 실루엣, 투명 배경)에 맞춘다.
+
+- [ ] **Step 1: sd35l로 컨셉 이미지 생성 (profile 필요)**
+
+`sd35l` 스킬로 "cursor + glowing highlight ring" 상징의 아이콘 컨셉을 3~4종 생성. 프롬프트는 macOS 앱 아이콘 스타일(rounded-square app icon, centered symbol, subtle gradient, clean, minimal)로 최적화. AWS 자격증명(profile1/profile2, us-west-2)이 필요하므로 사용자에게 사용 가능 여부를 먼저 확인한다. 컨셉은 방향 결정용 참고 자료이며 최종 아이콘이 아니다.
+
+- [ ] **Step 2: 사용자와 컨셉 방향 확정**
+
+생성된 컨셉을 제시하고 어떤 무드/구성을 최종 SVG로 다듬을지 사용자와 합의.
+
+- [ ] **Step 3: 최종 아이콘 SVG 작성 (image-authoring 스킬)**
+
+합의된 방향으로 `assets/AppIcon.svg`를 벡터로 작성. macOS 관례: 둥근 사각형 배경 + 중앙에 단순한 커서/링 심볼. 다크/라이트 양쪽에서 읽히는 대비 확보. (색상은 앱 하이라이트 기본색 계열과 조화)
+
+- [ ] **Step 4: PNG 렌더 + .icns 조립**
+
+SVG를 16/32/64/128/256/512/1024px(및 @2x)로 렌더하고 `iconutil`로 `AppIcon.icns` 생성. `iconutil`은 CLT에 포함되어 Xcode.app 없이 동작한다:
+```bash
+# iconset 디렉토리에 규격 파일명(icon_16x16.png, icon_16x16@2x.png, ... icon_512x512@2x.png) 배치 후
+iconutil -c icns assets/AppIcon.iconset -o assets/AppIcon.icns
+```
+
+- [ ] **Step 5: Info.plist + build_app.sh 반영**
+
+`Info.plist`에 `<key>CFBundleIconFile</key><string>AppIcon</string>` 추가. `build_app.sh`에 `mkdir -p "$APP/Contents/Resources" && cp assets/AppIcon.icns "$APP/Contents/Resources/AppIcon.icns"` 추가.
+
+- [ ] **Step 6: 빌드 + 실제 확인**
+
+Run: `./scripts/build_app.sh && open HighlightCursor.app`
+Finder/Dock에서 아이콘이 제대로 보이는지 확인(아이콘 캐시 때문에 재로그인/`killall Dock`이 필요할 수 있음).
+
+- [ ] **Step 7: Commit**
+
+```bash
+git add -A && git commit -m "feat: app icon (sd35l concept + SVG final, .icns bundle)"
+```
