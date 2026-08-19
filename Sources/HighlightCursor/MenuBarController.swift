@@ -35,6 +35,7 @@ final class MenuBarController {
                                 action: #selector(toggleTrail), enabled: false))
         menu.addItem(toggleItem("클릭 이펙트", isOn: s.clickEffectEnabled,
                                 action: #selector(toggleClick), enabled: true))
+        menu.addItem(clickStyleMenuItem(current: s.clickEffectStyle))
         menu.addItem(.separator())
 
         let quit = NSMenuItem(title: "종료", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
@@ -55,6 +56,34 @@ final class MenuBarController {
         return item
     }
 
+    /// 한국어 라벨: ripple=물결, sakura=벚꽃, energyBurst=기 폭발, sparkle=반짝임.
+    private func styleLabel(_ style: ClickEffectStyle) -> String {
+        switch style {
+        case .ripple:      return "물결"
+        case .sakura:      return "벚꽃"
+        case .energyBurst: return "기 폭발"
+        case .sparkle:     return "반짝임"
+        }
+    }
+
+    /// "클릭 이펙트 스타일 ▸" 서브메뉴. 4개 스타일을 라디오 체크로 제공하고
+    /// 현재 선택된 스타일에 체크마크를 표시한다.
+    private func clickStyleMenuItem(current: ClickEffectStyle) -> NSMenuItem {
+        let parent = NSMenuItem(title: "클릭 이펙트 스타일", action: nil, keyEquivalent: "")
+        let submenu = NSMenu()
+        submenu.autoenablesItems = false
+        for style in ClickEffectStyle.allCases {
+            let item = NSMenuItem(title: styleLabel(style),
+                                  action: #selector(selectClickStyle(_:)), keyEquivalent: "")
+            item.state = (style == current) ? .on : .off
+            item.target = self
+            item.representedObject = style.rawValue
+            submenu.addItem(item)
+        }
+        parent.submenu = submenu
+        return parent
+    }
+
     @objc private func toggleHighlight() {
         var s = store.settings; s.highlightEnabled.toggle(); store.settings = s; changed()
     }
@@ -66,6 +95,12 @@ final class MenuBarController {
     }
     @objc private func toggleClick() {
         var s = store.settings; s.clickEffectEnabled.toggle(); store.settings = s; changed()
+    }
+
+    @objc private func selectClickStyle(_ sender: NSMenuItem) {
+        guard let raw = sender.representedObject as? String,
+              let style = ClickEffectStyle(rawValue: raw) else { return }
+        var s = store.settings; s.clickEffectStyle = style; store.settings = s; changed()
     }
 
     private func changed() {

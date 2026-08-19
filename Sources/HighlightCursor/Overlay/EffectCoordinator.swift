@@ -64,9 +64,10 @@ final class EffectCoordinator {
     }
 
     private func broadcastClick(point: CGPoint, kind: ClickKind, root: CALayer) {
-        // Task 7: 클릭 이펙트가 켜져 있으면 클릭 위치에 링 물결을 방출한다.
-        if store.settings.clickEffectEnabled {
-            clickEffect.emit(at: point, kind: kind, on: root)
+        // Task 7/15: 클릭 이펙트가 켜져 있으면 선택된 스타일로 클릭 위치에 이펙트를 방출한다.
+        let settings = store.settings
+        if settings.clickEffectEnabled {
+            clickEffect.emit(at: point, kind: kind, style: settings.clickEffectStyle, on: root)
         }
     }
 
