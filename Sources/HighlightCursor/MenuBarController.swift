@@ -33,8 +33,8 @@ final class MenuBarController {
                                 action: #selector(toggleSpotlight), enabled: false))
         menu.addItem(toggleItem("트레일 (준비 중)", isOn: s.trailEnabled,
                                 action: #selector(toggleTrail), enabled: false))
-        menu.addItem(toggleItem("클릭 이펙트 (준비 중)", isOn: s.clickEffectEnabled,
-                                action: #selector(toggleClick), enabled: false))
+        menu.addItem(toggleItem("클릭 이펙트", isOn: s.clickEffectEnabled,
+                                action: #selector(toggleClick), enabled: true))
         menu.addItem(.separator())
 
         let quit = NSMenuItem(title: "종료", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")

@@ -14,6 +14,9 @@ final class EffectCoordinator {
     private var highlight: HighlightLayer?
     private var highlightRoot: CALayer?
 
+    // Task 7: 클릭 이펙트(일회성 링 물결).
+    private let clickEffect = ClickEffectLayer()
+
     init(controller: OverlayWindowController, store: SettingsStore) {
         self.controller = controller
         self.store = store
@@ -61,7 +64,10 @@ final class EffectCoordinator {
     }
 
     private func broadcastClick(point: CGPoint, kind: ClickKind, root: CALayer) {
-        // Task 7에서 클릭 이펙트 연결.
+        // Task 7: 클릭 이펙트가 켜져 있으면 클릭 위치에 링 물결을 방출한다.
+        if store.settings.clickEffectEnabled {
+            clickEffect.emit(at: point, kind: kind, on: root)
+        }
     }
 
     // MARK: - Settings refresh
