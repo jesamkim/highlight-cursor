@@ -32,27 +32,6 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         super.init(window: window)
         window.delegate = self
         buildForm()
-
-        // 앱이 숨겨지면(Cmd+H 등) windowDidMiniaturize가 불리지 않으므로
-        // 별도로 구독해 미리보기 타이머를 확실히 멈추고, 다시 보이면 재시작한다.
-        NotificationCenter.default.addObserver(
-            self, selector: #selector(appDidHide),
-            name: NSApplication.didHideNotification, object: nil
-        )
-        NotificationCenter.default.addObserver(
-            self, selector: #selector(appDidUnhide),
-            name: NSApplication.didUnhideNotification, object: nil
-        )
-    }
-
-    @objc private func appDidHide() { preview.stopAnimating() }
-    @objc private func appDidUnhide() {
-        guard window?.isVisible == true else { return }
-        preview.startAnimating()
-    }
-
-    deinit {
-        NotificationCenter.default.removeObserver(self)
     }
 
     @available(*, unavailable)
@@ -65,28 +44,12 @@ final class SettingsWindowController: NSWindowController, NSWindowDelegate {
         preview.apply(store.settings)
         showWindow(nil)
         window?.center()
-        preview.startAnimating()
     }
 
     /// 설정 창이 열려 있는 동안 메뉴바에서 효과를 토글했을 때, 그 최신 상태를
     /// 미리보기에 즉시 반영한다(닫고 다시 열지 않아도 되도록).
     func syncPreviewWithStore() {
         preview.apply(store.settings)
-    }
-
-    /// 창이 최소화되거나 앱이 숨겨지면 보이지 않는 곳에서 타이머가 계속 돌지
-    /// 않도록 멈추고, 다시 보이면 재시작한다.
-    func windowDidMiniaturize(_ notification: Notification) {
-        preview.stopAnimating()
-    }
-
-    func windowDidDeminiaturize(_ notification: Notification) {
-        preview.startAnimating()
-    }
-
-    /// 창이 닫힐 때 미리보기 타이머를 반드시 멈춰 배경에서 계속 돌지 않게 한다.
-    func windowWillClose(_ notification: Notification) {
-        preview.stopAnimating()
     }
 
     // MARK: - Form
