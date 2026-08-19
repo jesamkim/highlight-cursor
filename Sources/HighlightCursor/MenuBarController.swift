@@ -105,4 +105,10 @@ final class MenuBarController {
         rebuildMenu()   // 체크마크 상태 갱신
         onChange()
     }
+
+    /// 단축키 등 메뉴 밖에서 설정이 바뀌었을 때 체크마크만 다시 그린다.
+    /// (설정 반영 자체는 호출자가 이미 처리했다고 가정)
+    func refreshMenu() {
+        rebuildMenu()
+    }
 }

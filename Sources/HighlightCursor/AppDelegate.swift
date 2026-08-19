@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private lazy var overlayController = OverlayWindowController()
     private lazy var coordinator = EffectCoordinator(controller: overlayController, store: store)
     private var menuBar: MenuBarController?
+    private let hotkeys = HotkeyManager()
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSLog("HighlightCursor launched")
@@ -20,6 +21,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menuBar = MenuBarController(store: store) { [weak self] in
             self?.coordinator.refreshSettings()
         }
+
+        // 전역 단축키(⌥⌘H/S/T): 설정을 바꾸고 코디네이터·메뉴바 체크마크를 함께 갱신한다.
+        hotkeys.onToggleHighlight = { [weak self] in self?.toggle { $0.highlightEnabled.toggle() } }
+        hotkeys.onToggleSpotlight = { [weak self] in self?.toggle { $0.spotlightEnabled.toggle() } }
+        hotkeys.onToggleTrail = { [weak self] in self?.toggle { $0.trailEnabled.toggle() } }
+        hotkeys.start()
 
         eventMonitor.onMove = { [weak self] point in
             self?.coordinator.handleMove(global: point)
@@ -38,5 +45,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
                 self?.overlayController.rebuildForCurrentScreens()
             }
         }
+    }
+
+    /// 설정 필드 하나를 뮤테이션한 뒤 저장하고, 코디네이터와 메뉴바 체크마크를
+    /// 함께 갱신한다. 메뉴 토글과 단축키가 이 하나의 경로를 공유해 상태가
+    /// 항상 일치한다.
+    private func toggle(_ mutate: (inout Settings) -> Void) {
+        var s = store.settings
+        mutate(&s)
+        store.settings = s
+        coordinator.refreshSettings()
+        menuBar?.refreshMenu()
     }
 }
