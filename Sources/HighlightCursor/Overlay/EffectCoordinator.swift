@@ -63,4 +63,30 @@ final class EffectCoordinator {
     private func broadcastClick(point: CGPoint, kind: ClickKind, root: CALayer) {
         // Task 7에서 클릭 이펙트 연결.
     }
+
+    // MARK: - Settings refresh
+
+    /// 메뉴/단축키로 설정이 바뀌었을 때 살아있는 효과에 즉시 반영한다.
+    /// 현재는 하이라이트만 존재하므로 그것만 처리한다.
+    func refreshSettings() {
+        let settings = store.settings
+        if settings.highlightEnabled {
+            // 켜져 있으면 현재 커서 위치에 즉시 반영한다. 마우스를 움직이지 않아도
+            // 지름·색·투명도 변경과 재활성화가 바로 보이도록 broadcastMove를 태운다.
+            let global = NSEvent.mouseLocation
+            if let (layer, frame) = controller.rootLayer(forGlobal: global) {
+                let point = CoordinateConverter.toLayerPoint(globalPoint: global, in: frame)
+                highlight?.apply(settings: settings)
+                CATransaction.begin()
+                CATransaction.setDisableActions(true)
+                broadcastMove(point: point, root: layer)
+                CATransaction.commit()
+            }
+        } else {
+            // 꺼지면 레이어를 떼고 캐시를 비워 재활성화 시 깨끗하게 다시 붙게 한다.
+            highlight?.layer.removeFromSuperlayer()
+            highlightRoot = nil
+        }
+        // Task 7/8/9: refresh spotlight/trail/click here
+    }
 }

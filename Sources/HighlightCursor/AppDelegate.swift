@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let store = SettingsStore()
     private lazy var overlayController = OverlayWindowController()
     private lazy var coordinator = EffectCoordinator(controller: overlayController, store: store)
+    private var menuBar: MenuBarController?
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSLog("HighlightCursor launched")
@@ -14,6 +15,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         // 오버레이·코디네이터를 지연 초기화 프로퍼티에서 강제 생성한다.
         _ = coordinator
+
+        // 메뉴바 아이콘 + 효과 토글 + 종료 메뉴. 토글 시 코디네이터에 반영한다.
+        menuBar = MenuBarController(store: store) { [weak self] in
+            self?.coordinator.refreshSettings()
+        }
 
         eventMonitor.onMove = { [weak self] point in
             self?.coordinator.handleMove(global: point)
