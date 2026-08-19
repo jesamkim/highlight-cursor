@@ -22,6 +22,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.coordinator.refreshSettings()
         }
 
+        // 시작 시 UserDefaults에 저장된 이전 상태(어떤 효과가 켜져 있었는지)를
+        // 즉시 복원한다. 마우스를 움직이기 전에도 하이라이트/스포트라이트가
+        // 저장된 대로 보이게 한다.
+        coordinator.refreshSettings()
+
         // 전역 단축키(⌥⌘H/S/T): 설정을 바꾸고 코디네이터·메뉴바 체크마크를 함께 갱신한다.
         hotkeys.onToggleHighlight = { [weak self] in self?.toggle { $0.highlightEnabled.toggle() } }
         hotkeys.onToggleSpotlight = { [weak self] in self?.toggle { $0.spotlightEnabled.toggle() } }

@@ -9,6 +9,7 @@ final class MenuBarController {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let store: SettingsStore
     private let onChange: () -> Void
+    private var settingsWindow: SettingsWindowController?
 
     init(store: SettingsStore, onSettingsChanged: @escaping () -> Void) {
         self.store = store
@@ -34,6 +35,10 @@ final class MenuBarController {
         menu.addItem(toggleItem("클릭 이펙트", isOn: s.clickEffectEnabled,
                                 action: #selector(toggleClick), enabled: true))
         menu.addItem(clickStyleMenuItem(current: s.clickEffectStyle))
+        menu.addItem(.separator())
+
+        let settingsItem = NSMenuItem(title: "설정…", action: #selector(openSettings), keyEquivalent: ",")
+        menu.addItem(settingsItem)
         menu.addItem(.separator())
 
         let quit = NSMenuItem(title: "종료", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
@@ -99,6 +104,18 @@ final class MenuBarController {
         guard let raw = sender.representedObject as? String,
               let style = ClickEffectStyle(rawValue: raw) else { return }
         var s = store.settings; s.clickEffectStyle = style; store.settings = s; changed()
+    }
+
+    @objc private func openSettings() {
+        let win = settingsWindow ?? {
+            let created = SettingsWindowController(store: store) { [weak self] in
+                self?.onChange()
+                self?.rebuildMenu()   // 슬라이더 변경 후 체크마크·라벨 동기화
+            }
+            settingsWindow = created
+            return created
+        }()
+        win.show()
     }
 
     private func changed() {
