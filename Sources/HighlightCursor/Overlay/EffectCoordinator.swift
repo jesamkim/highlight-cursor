@@ -22,6 +22,10 @@ final class EffectCoordinator {
     // Task 7: 클릭 이펙트(일회성 링 물결).
     private let clickEffect = ClickEffectLayer()
 
+    // Task 9: 커서 트레일(빠른 이동 시 잔상). 화면 전환 시 이전 화면의 점은
+    // 자연 소멸하도록 두고, 새 화면에는 새 점을 남긴다.
+    private var trail: TrailLayer?
+
     init(controller: OverlayWindowController, store: SettingsStore) {
         self.controller = controller
         self.store = store
@@ -71,6 +75,8 @@ final class EffectCoordinator {
             spotlightRoot = nil
         }
 
+        // Task 6: 하이라이트를 먼저 확보해(존재/화면전환 처리) 트레일이 그 바로
+        // 아래에 삽입될 수 있게 한다(z-order: 트레일이 하이라이트를 가리지 않음).
         if settings.highlightEnabled {
             let highlight = self.highlight ?? {
                 let created = HighlightLayer(settings: settings)
@@ -89,6 +95,16 @@ final class EffectCoordinator {
         } else {
             highlight?.layer.removeFromSuperlayer()
             highlightRoot = nil
+        }
+
+        // Task 9: 트레일 점은 하이라이트 바로 아래에 삽입해 하이라이트를 가리지 않게 한다.
+        if settings.trailEnabled {
+            let trail = self.trail ?? {
+                let created = TrailLayer(settings: settings)
+                self.trail = created
+                return created
+            }()
+            trail.addPoint(point, on: root, below: highlight?.layer)
         }
     }
 
@@ -137,6 +153,14 @@ final class EffectCoordinator {
             CATransaction.setDisableActions(true)
             broadcastMove(point: point, root: layer)
             CATransaction.commit()
+        }
+        if settings.trailEnabled {
+            // 개수·색·투명도 변경을 다음 점부터 반영한다. 트레일은 움직임 기반이라
+            // 즉시 렌더할 필요는 없다.
+            trail?.apply(settings: settings)
+        } else {
+            // 꺼지면 남아 있는 점들을 즉시 정리한다.
+            trail?.clear()
         }
         // Task 9: refresh trail here
     }
