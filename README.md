@@ -106,7 +106,7 @@ open HighlightCursor.app
 
 ## 만든이
 
-**Jesam Kim** ([@jesamkim](https://github.com/jesamkim))이 설계·구현했습니다. 브레인스토밍부터 스펙·계획·구현·코드 리뷰까지 AI 에이전트 **Kiro** 👻와 함께 만들었습니다.
+**Jesam Kim** ([@jesamkim](https://github.com/jesamkim)) : 설계·구현 => 브레인스토밍부터 스펙·계획·구현·코드 리뷰까지 AWS AI 에이전트 **Kiro** 👻 와 함께 만들었습니다.
 
 ## 라이선스
 
