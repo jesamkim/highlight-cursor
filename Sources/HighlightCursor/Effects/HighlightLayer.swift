@@ -8,8 +8,14 @@ import HighlightCursorCore
 final class HighlightLayer {
     let layer = CAShapeLayer()
     private var diameter: Double = 50
-    /// 테두리 두께(내부 채움 없이 링만 그린다).
-    private let lineWidth: CGFloat = 3
+
+    /// 지름에 비례해 테두리 두께를 계산한다(6% 비율, 2~8px 사이로 제한).
+    /// 지름이 커질수록 링이 얇아 보이지 않도록 두께도 함께 커지되, 너무 얇거나
+    /// 뚱뚱해지지 않게 상하한을 둔다. (기본 지름 50px → 두께 3px, 기존과 동일)
+    private static func lineWidth(forDiameter diameter: Double) -> CGFloat {
+        let proportional = diameter * 0.06
+        return CGFloat(min(max(proportional, 2.0), 8.0))
+    }
 
     init(settings: Settings) {
         apply(settings: settings)
@@ -19,6 +25,7 @@ final class HighlightLayer {
     func apply(settings: Settings) {
         diameter = settings.highlightDiameter
         let d = CGFloat(diameter)
+        let lineWidth = Self.lineWidth(forDiameter: diameter)
         layer.frame = CGRect(x: 0, y: 0, width: d, height: d)
         // 테두리가 프레임 밖으로 잘리지 않도록 lineWidth 절반만큼 안쪽으로 원을 그린다.
         let inset = lineWidth / 2
