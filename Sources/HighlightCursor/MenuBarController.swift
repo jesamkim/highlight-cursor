@@ -59,13 +59,14 @@ final class MenuBarController {
         return item
     }
 
-    /// 한국어 라벨: ripple=물결, sakura=벚꽃, energyBurst=기 폭발, sparkle=반짝임.
+    /// 한국어 라벨: ripple=물결, sakura=벚꽃, energyBurst=기 폭발, sparkle=반짝임, ghostRain=키로.
     private func styleLabel(_ style: ClickEffectStyle) -> String {
         switch style {
         case .ripple:      return "물결"
         case .sakura:      return "벚꽃"
         case .energyBurst: return "기 폭발"
         case .sparkle:     return "반짝임"
+        case .ghostRain:   return "키로"
         }
     }
 

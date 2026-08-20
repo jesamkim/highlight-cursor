@@ -25,13 +25,14 @@ enum ClickEffectStyleRenderer {
     private static let sakuraPetals = 6
     private static let burstRays = 8
     private static let sparkleStars = 8
+    private static let ghostCount = 12
 
     // MARK: - 진입점
 
     /// 동시에 살아있는 클릭 이펙트 파티클 레이어 수의 상한.
     /// 연타(오토클리커 포함) 시 레이어가 무한정 쌓여 GPU 애니메이션이 누적되는 것을 막는다.
     /// 예산이 소진된 상태에서 들어온 클릭은 조용히 무시(coalesce)한다. 각 파티클은
-    /// 0.45~0.6초 뒤 완료 콜백에서 카운트를 되돌린다.
+    /// 0.45~0.9초 뒤 완료 콜백에서 카운트를 되돌린다.
     private static let maxConcurrentParticles = 48
     private static var activeParticleCount = 0
 
@@ -43,6 +44,7 @@ enum ClickEffectStyleRenderer {
         case .sakura:      requested = sakuraPetals
         case .energyBurst: requested = burstRays + 1   // 광선 + 중앙 링
         case .sparkle:     requested = sparkleStars
+        case .ghostRain:   requested = ghostCount
         }
         guard activeParticleCount + requested <= maxConcurrentParticles else { return }
 
@@ -51,6 +53,7 @@ enum ClickEffectStyleRenderer {
         case .sakura:      emitSakura(at: point, on: root)
         case .energyBurst: emitEnergyBurst(at: point, kind: kind, on: root)
         case .sparkle:     emitSparkle(at: point, on: root)
+        case .ghostRain:   emitGhostRain(at: point, on: root)
         }
     }
 
@@ -217,6 +220,78 @@ enum ClickEffectStyleRenderer {
         }
     }
 
+    // MARK: - ghostRain (작은 Kiro 유령들이 커서 아래로 우르르 쏟아짐)
+
+    /// 클릭 지점에서 작은 유령들이 좌우 양쪽으로 퍼지며 포물선을 그린다. 각자 살짝 위로
+    /// 솟았다가 중력을 받아 아래로 떨어진다. 이동 경로는 2차 베지에로 만들어서(등속 수평 +
+    /// 등가속 수직 운동과 수학적으로 동일) 실제 투사체처럼 보인다. 마리마다 좌우 거리와
+    /// 솟는 높이, 낙하 거리, 지속시간, 크기를 다르게 줘서 다이나믹하게 흩어진다.
+    /// 유령 모양은 KiroCrew 응답 대기에 쓰이는 Lucide `ghost` 아이콘 path를 그대로 쓴다.
+    static func emitGhostRain(at point: CGPoint, on root: CALayer) {
+        for i in 0..<ghostCount {
+            let ghost = makeGhost()
+            ghost.position = point
+
+            // 좌우로 퍼지는 포물선 투사체 운동.
+            // 유령을 좌/우 양쪽으로 갈라 보내고(부채꼴), 각자 살짝 위로 솟았다가
+            // 중력을 받아 아래로 떨어진다.
+            // 좌우 분배: 짝수는 오른쪽, 홀수는 왼쪽. 안쪽부터 바깥쪽으로 배치한다.
+            let side: CGFloat = (i % 2 == 0) ? 1 : -1
+            let rank = CGFloat(i / 2)                                  // 0,0,1,1,2,2...
+            let ranks = CGFloat(max((ghostCount + 1) / 2, 1))
+            // 가운데(거의 수직 낙하)부터 바깥쪽까지 고르게 채운다.
+            let lateral = (rank / ranks * 105) * side                   // 좌우 0~105px
+                + CGFloat.random(in: -9...9)
+            // 제어점을 시작점보다 얼마나 위에 둘지(정점 높이 자체는 아니다. 아래 설명 참고).
+            let lift = CGFloat.random(in: 26...44)
+            let drop = CGFloat.random(in: 105...155)                   // 아래로 낙하
+
+            // 2차 베지에로 포물선을 그린다. 제어점을 시작점보다 lift*2 위에 두면
+            // 곡선은 살짝 솟았다가 종점까지 가속하며 떨어진다.
+            // 실제 정점 높이는 4*lift^2 / (drop + 4*lift)이므로 현재 범위에서 약 13~23px이다.
+            // (등속 수평 + 등가속 수직 운동은 수학적으로 2차 베지에와 동일하다.)
+            let arc = CGMutablePath()
+            arc.move(to: point)
+            arc.addQuadCurve(
+                to: CGPoint(x: point.x + lateral, y: point.y - drop),
+                control: CGPoint(x: point.x + lateral * 0.5, y: point.y + lift * 2)
+            )
+
+            let move = CAKeyframeAnimation(keyPath: "position")
+            move.path = arc
+            move.calculationMode = .linear
+            // 시간에 대해 선형으로 경로를 따라가면 베지에 자체가 중력 가속을 만든다.
+            move.timingFunction = CAMediaTimingFunction(name: .linear)
+
+            // 떨어지는 동안 진행 방향으로 완만하게 기운다(퍼지는 쪽으로 눕는 느낌).
+            let sway = CAKeyframeAnimation(keyPath: "transform.rotation.z")
+            let tilt = CGFloat.random(in: 0.35...0.7) * side
+            sway.values = [0, tilt * 0.4, tilt]
+            sway.keyTimes = [0.0, 0.4, 1.0]
+            sway.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+
+            // 크기: 톡 튀어나오듯 살짝 오버슈트한 뒤 제 크기, 끝에 줄며 사라짐.
+            let base = CGFloat.random(in: 0.5...0.85)
+            let scale = CAKeyframeAnimation(keyPath: "transform.scale")
+            scale.values = [0.2, base * 1.06, base, base * 0.7]
+            scale.keyTimes = [0.0, 0.18, 0.6, 1.0]
+
+            let fade = CAKeyframeAnimation(keyPath: "opacity")
+            fade.values = [0.0, 0.98, 0.9, 0.0]
+            fade.keyTimes = [0.0, 0.12, 0.65, 1.0]
+
+            let group = CAAnimationGroup()
+            group.animations = [move, sway, scale, fade]
+            group.duration = CFTimeInterval.random(in: 0.75...1.15)   // 지속시간 편차
+            group.isRemovedOnCompletion = false
+            group.fillMode = .forwards
+            // 반짝임처럼 클릭 순간 거의 동시에 퍼지되, 아주 짧은 시차만 준다.
+            group.beginTime = CACurrentMediaTime() + Double(i) * 0.012
+
+            addOneShot(ghost, animation: group, key: "ghost", on: root)
+        }
+    }
+
     // MARK: - 공통 헬퍼
 
     /// 레이어를 루트에 붙이고 애니메이션을 걸며, 완료 시 자동으로 제거한다.
@@ -271,6 +346,55 @@ enum ClickEffectStyleRenderer {
         path.closeSubpath()
         layer.path = path
         layer.fillColor = color
+        return layer
+    }
+
+    /// 작은 Kiro 유령(흰색). KiroCrew 응답 대기 UI에 쓰이는 Lucide `ghost` 아이콘의
+    /// 24x24 뷰박스 path를 그대로 사용한다(몸통 + 눈 두 개). 몸통은 흰색으로 채우고
+    /// 눈은 어두운 점으로 찍어 그 유령과 같은 인상을 만든다.
+    private static func makeGhost() -> CAShapeLayer {
+        let box: CGFloat = 24
+        let layer = CAShapeLayer()
+        layer.bounds = CGRect(x: 0, y: 0, width: box, height: box)
+
+        // Lucide ghost 몸통 path (24x24 뷰박스). SVG는 좌상단 원점이므로 y를 뒤집어
+        // bottom-left 원점인 CALayer 좌표계에 맞춘다.
+        // 형태: 반지름 8 반원 머리(위) + 수직 몸통 + 물결 밑단 4개.
+        func p(_ x: CGFloat, _ y: CGFloat) -> CGPoint { CGPoint(x: x, y: box - y) }
+
+        let body = CGMutablePath()
+        // 왼쪽 어깨(4,10)에서 시작.
+        body.move(to: p(4, 10))
+        // 머리: 중심(12,10) 반지름 8의 반원을 왼쪽 어깨에서 오른쪽 어깨로.
+        // y를 뒤집은 좌표계이므로 각도 진행 방향도 뒤집혀 clockwise=true가 위쪽 반원이 된다.
+        body.addArc(center: p(12, 10), radius: 8,
+                    startAngle: .pi, endAngle: 0, clockwise: true)
+        // 오른쪽 몸통을 아래로 내린 뒤(20,22) 물결 밑단을 왼쪽으로 그어간다.
+        body.addLine(to: p(20, 22))
+        body.addLine(to: p(17, 19))
+        body.addLine(to: p(14.5, 21.5))
+        body.addLine(to: p(12, 19))
+        body.addLine(to: p(9.5, 21.5))
+        body.addLine(to: p(7, 19))
+        body.addLine(to: p(4, 22))
+        body.closeSubpath()   // 왼쪽 몸통을 따라 시작점으로
+
+        // 눈 두 개(Lucide의 M9 10 / M15 10 점). evenOdd로 몸통에서 파낸다.
+        let eyeR: CGFloat = 1.15
+        let leftEye = p(9, 10), rightEye = p(15, 10)
+        body.addEllipse(in: CGRect(x: leftEye.x - eyeR, y: leftEye.y - eyeR,
+                                   width: eyeR * 2, height: eyeR * 2))
+        body.addEllipse(in: CGRect(x: rightEye.x - eyeR, y: rightEye.y - eyeR,
+                                   width: eyeR * 2, height: eyeR * 2))
+
+        layer.path = body
+        layer.fillColor = ColorHex.cgColor("#FFFFFF", alpha: 0.95)
+        layer.fillRule = .evenOdd   // 눈 구멍이 몸통에서 파이도록
+        // 은은한 그림자로 어두운 배경에서도 유령이 떠 보이게.
+        layer.shadowColor = CGColor(gray: 0, alpha: 1)
+        layer.shadowRadius = 2
+        layer.shadowOpacity = 0.35
+        layer.shadowOffset = CGSize(width: 0, height: -1)
         return layer
     }
 }

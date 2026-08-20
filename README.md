@@ -13,7 +13,7 @@ Swift + AppKit + Core Animation으로 처음부터 만들었고, 상시 표시�
 화면 어디서든 커서를 따라다니는 은은한 하이라이트 링과, 클릭할 때 터지는 화려한 이펙트, 그리고 필요할 때 켜는 스포트라이트·트레일까지 — 발표 중에 "지금 여기를 보세요"를 말 대신 시각적으로 전달합니다.
 
 - 🟡 **커서 하이라이트** — 은은하게 숨 쉬는 펄스 애니메이션의 링이 커서를 항상 따라다닙니다.
-- ✨ **클릭 이펙트** — 클릭할 때마다 4가지 스타일 중 고른 이펙트가 터집니다: 물결(ripple), 벚꽃(sakura), 기 폭발(energyBurst), 반짝임(sparkle). 좌클릭과 우클릭은 색으로 구분됩니다.
+- ✨ **클릭 이펙트** — 클릭할 때마다 5가지 스타일 중 고른 이펙트가 터집니다: 물결(ripple), 벚꽃(sakura), 기 폭발(energyBurst), 반짝임(sparkle), 키로(ghostRain). 좌클릭과 우클릭은 색으로 구분됩니다.
 - 🔦 **스포트라이트** — 커서 주변 원만 밝게 두고 나머지 화면을 어둡게 덮어 시선을 집중시킵니다.
 - 💫 **트레일** — 빠르게 움직일 때 짧은 잔상이 따라오다 사라집니다.
 - ⚙️ **설정 창** — 색상·크기·투명도·반경·어둡기·잔상 개수를 슬라이더로 조정하고, 상단 미리보기 패널에서 조정 결과를 바로 확인합니다. macOS 로그인 시 자동 실행도 여기서 켤 수 있습니다.
@@ -68,11 +68,24 @@ open HighlightCursor.app
 
 앱은 메뉴바 액세서리로 실행되며 Dock 아이콘이 없습니다. **상단 메뉴바의 커서 아이콘**에서 모든 기능에 접근합니다.
 
+### 업데이트
+
+앱 번들(`HighlightCursor.app`)은 빌드 산출물이라 repo에 포함하지 않습니다. 따라서 `git pull`만으로는 변경 사항이 적용되지 않고, 재빌드가 필요합니다.
+
+```bash
+git pull
+pkill -x HighlightCursor       # 실행 중인 이전 버전 종료
+./scripts/build_app.sh         # 재빌드 + ad-hoc 서명
+open HighlightCursor.app
+```
+
+ad-hoc 서명은 번들 식별자를 고정해서(`com.jesamkim.highlightcursor`) 재빌드해도 접근성 권한을 다시 부여하지 않아도 되게 합니다.
+
 ## 사용법
 
 메뉴바 아이콘을 클릭하면:
 - 각 효과 켜기/끄기 (체크마크로 현재 상태 표시)
-- 클릭 이펙트 스타일 선택 (물결 / 벚꽃 / 기 폭발 / 반짝임)
+- 클릭 이펙트 스타일 선택 (물결 / 벚꽃 / 기 폭발 / 반짝임 / 키로)
 - **설정…** — 세부 값 조정 창 열기
 - **종료**
 
@@ -92,7 +105,7 @@ open HighlightCursor.app
         ├──▶ HighlightLayer    커서를 따라다니는 펄스 링
         ├──▶ SpotlightLayer    주변 어둡게 (방사형 그라데이션 마스크)
         ├──▶ TrailLayer        잔상 (개수 상한 큐)
-        └──▶ ClickEffectLayer  클릭 시 일회성 이펙트 (4 스타일)
+        └──▶ ClickEffectLayer  클릭 시 일회성 이펙트 (5 스타일)
              │
              ▼
    OverlayWindow (화면별)  ← 투명·클릭통과 창, Core Animation 레이어를 얹음
@@ -105,7 +118,7 @@ open HighlightCursor.app
 이 환경(Command Line Tools만 설치, Xcode.app 없음)에는 XCTest와 swift-testing이 모두 없어서 `swift test`를 쓸 수 없습니다. 대신 의존성 없는 자체 테스트 셤(`TinyTest`)으로 순수 로직(설정 저장/로드, 좌표 변환, 색상 파싱, 클릭 스타일 하위호환성)을 검증합니다.
 
 ```bash
-./scripts/test.sh   # 20개 체크, 실패 시 non-zero 종료
+./scripts/test.sh   # 21개 체크, 실패 시 non-zero 종료
 ```
 
 시각 효과(하이라이트·스포트라이트·클릭 이펙트)는 자동 테스트가 어려워 실제 앱 실행으로 확인합니다.

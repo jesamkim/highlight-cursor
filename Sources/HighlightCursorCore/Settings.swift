@@ -1,15 +1,17 @@
 import Foundation
 
-/// 클릭 이펙트 스타일 프리셋(애니 감성 4종).
+/// 클릭 이펙트 스타일 프리셋.
 /// - `ripple`: 링 하나가 퍼지며 사라지는 차분한 기본형(좌/우 색 구분).
 /// - `sakura`: 분홍 벚꽃잎 여러 장이 회전·부유하며 페이드아웃.
 /// - `energyBurst`: 중앙 링 + 방사형 광선이 팍 터졌다 수축(좌/우 색 구분).
 /// - `sparkle`: 작은 별들이 사방으로 튀며 반짝이다 사라짐.
+/// - `ghostRain`: 작은 Kiro 유령들이 커서 아래로 우르르 쏟아지며 떨어짐(중력 낙하).
 public enum ClickEffectStyle: String, Codable, CaseIterable, Sendable {
     case ripple
     case sakura
     case energyBurst
     case sparkle
+    case ghostRain
 }
 
 /// 앱 전역 설정 모델. 각 효과의 on/off와 파라미터를 담는다.
